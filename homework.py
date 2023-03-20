@@ -38,13 +38,15 @@ def check_tokens() -> None:
         "TELEGRAM_TOKEN": TELEGRAM_TOKEN,
         "TELEGRAM_CHAT_ID": TELEGRAM_CHAT_ID,
     }
-    empty_tokens = ""
+    empty_tokens = []
     for var in env_vars:
         if not env_vars[var]:
-            empty_tokens += f"{var}; "
+            empty_tokens.append(var)
     if empty_tokens:
+        empty_tokens_list = ", ".join(empty_tokens)
         raise EnvironmentVariableDoesNotExist(
-            f"Отсутствует обязательная переменная окружения: {empty_tokens}"
+            "Отсутствует обязательная переменная окружения: "
+            f"{empty_tokens_list}."
         )
 
 
