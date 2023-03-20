@@ -3,8 +3,8 @@ import requests
 import logging
 import telegram
 import time
+import sys
 from typing import Optional
-from sys import stdout
 from dotenv import load_dotenv
 from http import HTTPStatus
 from exceptions import (
@@ -20,14 +20,14 @@ TELEGRAM_TOKEN: str = os.getenv("TELEGRAM_TOKEN", "")
 TELEGRAM_CHAT_ID: str = os.getenv("TELEGRAM_CHAT_ID", "")
 
 RETRY_PERIOD: int = 600
-ENDPOINT: str = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
-HEADERS: dict[str, str] = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
+ENDPOINT: str = "https://practicum.yandex.ru/api/user_api/homework_statuses/"
+HEADERS: dict[str, str] = {"Authorization": f"OAuth {PRACTICUM_TOKEN}"}
 
 
 HOMEWORK_VERDICTS: dict = {
-    'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
-    'reviewing': 'Работа взята на проверку ревьюером.',
-    'rejected': 'Работа проверена: у ревьюера есть замечания.'
+    "approved": "Работа проверена: ревьюеру всё понравилось. Ура!",
+    "reviewing": "Работа взята на проверку ревьюером.",
+    "rejected": "Работа проверена: у ревьюера есть замечания."
 }
 
 
@@ -38,13 +38,14 @@ def check_tokens() -> None:
         "TELEGRAM_TOKEN": TELEGRAM_TOKEN,
         "TELEGRAM_CHAT_ID": TELEGRAM_CHAT_ID,
     }
-    # в такой реализации исключение выпадет при первом же пустом токене,
-    # а как можно реализовать, чтобы был проверен весь словарь до конца,
-    # и выпали ошибки сразу со всеми проблемными токенами?
+    empty_tokens = ""
     for var in env_vars:
         if not env_vars[var]:
-            raise EnvironmentVariableDoesNotExist(
-                f"Отсутствует обязательная переменная окружения: '{var}'.")
+            empty_tokens += f"{var}; "
+    if empty_tokens:
+        raise EnvironmentVariableDoesNotExist(
+            f"Отсутствует обязательная переменная окружения: {empty_tokens}"
+        )
 
 
 def send_message(bot: telegram.Bot, message: str) -> None:
@@ -63,7 +64,7 @@ def get_api_answer(timestamp: int) -> dict:
     возвращает ответ, приведенный к типам данных Python.
     """
     try:
-        payload = {'from_date': timestamp}
+        payload = {"from_date": timestamp}
         response = requests.get(ENDPOINT, headers=HEADERS, params=payload)
     except requests.RequestException as error:
         raise EndpointDisable(f"Неуспешный запрос: '{error}'.")
@@ -110,18 +111,11 @@ def parse_status(homework: dict) -> str:
 
 def main() -> None:
     """Основная логика работы бота."""
-    # Настройка логирования
-    logging.basicConfig(
-        stream=stdout,
-        level=logging.DEBUG,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
-
     try:
         check_tokens()
     except EnvironmentVariableDoesNotExist as error:
-        logging.critical(f'{error} Программа принудительно остановлена.')
-        exit()
+        logging.critical(f"{error} Программа принудительно остановлена.")
+        sys.exit(f"{error} Программа принудительно остановлена.")
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     send_message(
         bot,
@@ -154,6 +148,15 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    # Настройка логирования
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=(
+            logging.StreamHandler(sys.stdout),
+            logging.FileHandler("logs.txt", mode="a")
+        )
+    )
     try:
         main()
     except KeyboardInterrupt:
