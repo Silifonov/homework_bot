@@ -22,7 +22,7 @@ python -m pip install --upgrade pip
 
 pip install -r requirements.txt
 ```
-Файл example.env переименовать в .env и заполнить своими данными.
+Файл *example.env* переименовать в *.env* и заполнить своими данными.
 1. Получить PRACTICUM_TOKEN для доступа к Домашке можно по ссылке https://oauth.yandex.ru/authorize?response_type=token&client_id=1d0b9dd4d652455a9eb710d450ff456a
 2. TELEGRAM_TOKEN выдаст @BotFather при создании бота
 3. TELEGRAM_CHAT_ID спросить у бота @userinfobot
